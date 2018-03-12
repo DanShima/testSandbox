@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<head>
+    <script src="js.js"></script>
+</head>
+<body>
+<header>
+  <h1>iframe postMessage() Demo</h1>
+</header>
+<hr>
+<div class="container" id="main">
+  Loading...
+</div>
+
+<!-- Probe script -->
+<script id="probe" type="text/template+javascript">
+(function (id, origin) {
+  function getHeight (element) {
+    return Math.ceil(element.offsetHeight);
+  }
+
+  function eventListener (event) {
+    var data = {
+      id: id,
+      type: event.type
+    };
+    switch (event.type) {
+      case 'load':
+      case 'resize':
+        data.height = getHeight(document.body);
+        break;
+      case 'click':
+        data.href = event.srcElement.href;
+        event.preventDefault();
+        break;
+    }
+    window.parent.postMessage(JSON.stringify(data), origin);
+    return false;
+  }
+
+  function messageListener (event) {
+    if (event.origin !== origin) {
+      return;
+    }
+    const data = JSON.parse(event.data);
+    switch (data.type) {
+      case 'print':
+        window.print();
+        break;
+    }
+  }
+
+  if (id) {
+    window.onload = eventListener;
+    window.onresize = eventListener;
+    for (var i = document.links.length - 1; i >= 0; i--) {
+      document.links[i].onclick = eventListener;
+    }
+    window.addEventListener('message', messageListener, false);
+  }
+})(window.probeId, window.probeOrigin);
+</script>
+
+
+<!-- Example html part -->
+<script id="template" type="text/template+html">
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Template</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Template Title</h1>
+  <p>Template Body</p>
+  <p>Link example: <a href="https://google.com">google.com</a></p>
+</body>
+</html>
+</script>
+</body>
+</html>
